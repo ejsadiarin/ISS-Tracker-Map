@@ -2,6 +2,8 @@ import "./style.css";
 import typescriptLogo from "./typescript.svg";
 import viteLogo from "../assets/vite.svg";
 import { setupCounter } from "./counter.ts";
+import { ISSType } from "./types";
+import { posFetcher } from "./fetcher.ts";
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <div>
@@ -51,74 +53,25 @@ document.addEventListener("DOMContentLoaded", async (event) => {
   document.body.appendChild(script);
 });
 
-const API_URL = "https://api.wheretheiss.at/v1/satellites/25544";
+async function elementUpdater(data: ISSType) {
+  try {
+    // Request needed libraries.
+    const { Map } = (await google.maps.importLibrary(
+      "maps",
+    )) as google.maps.MapsLibrary;
 
-type ISSType = {
-  name: string;
-  id: number;
-  latitude: number;
-  longitude: number;
-  altitude: number;
-  velocity: number;
-  visibility: string;
-  footprint: number;
-  timestamp: number;
-  daynum: number;
-  solar_lat: number;
-  solar_lon: number;
-  units: string;
-};
+    const { AdvancedMarkerElement } = (await google.maps.importLibrary(
+      "marker",
+    )) as google.maps.MarkerLibrary;
 
-//{
-//    "name": "iss",
-//    "id": 25544,
-//    "latitude": 50.11496269845,
-//    "longitude": 118.07900427317,
-//    "altitude": 408.05526028199,
-//    "velocity": 27635.971970874,
-//    "visibility": "daylight",
-//    "footprint": 4446.1877699772,
-//    "timestamp": 1364069476,
-//    "daynum": 2456375.3411574,
-//    "solar_lat": 1.3327003598631,
-//    "solar_lon": 238.78610691196,
-//    "units": "kilometers"
-//}
-
-// GLOBAL VARS
-async function main() {
-  const { Map } = (await google.maps.importLibrary(
-    "maps",
-  )) as google.maps.MapsLibrary;
-
-  const { AdvancedMarkerElement } = (await google.maps.importLibrary(
-    "marker",
-  )) as google.maps.MarkerLibrary;
-
-  //let ISSData: ISSType;
-
-  const img = document.createElement("img");
-  img.src = "./assets/issImage.png";
-  img.alt = "ISSIMAGE";
-  img.width = 100;
-  img.height = 100;
-  img.className = "iss";
-
-  async function posFetcher(): Promise<ISSType> {
-    try {
-      const response = await fetch(API_URL);
-      if (!response.ok) throw new Error(`Error: ${response.status}`);
-      const ISSData = await response.json();
-      console.log(ISSData);
-      return ISSData;
-    } catch (error) {
-      console.error("Failed to fetch ISS position:", error);
-      throw error;
-    }
-  }
-
-  await posFetcher().then((data) => {
     const myLatlng = { lat: data.latitude, lng: data.longitude };
+
+    const img = document.createElement("img");
+    img.src = "./assets/issImage.png";
+    img.alt = "ISSIMAGE";
+    img.width = 100;
+    img.height = 100;
+    img.id = "iss";
 
     let map = new Map(document.getElementById("map") as HTMLElement, {
       zoom: 4,
@@ -157,17 +110,23 @@ async function main() {
       );
       infoWindow.open(map);
     });
-  });
-
-  setInterval(() => {
-    try {
-      main();
-    } catch (error) {
-      console.error("Failed to fetch data: ", error);
-      throw error;
-    }
-  }, 5000);
-
-  //mapRenderer(data);
+  } catch (error) {
+    console.error("Failed to render map: ", error);
+    throw error;
+  }
 }
+
+const data = await posFetcher();
+elementUpdater(data);
+
+setInterval(async () => {
+  try {
+    const data = await posFetcher();
+    elementUpdater(data);
+  } catch (error) {
+    console.error("Failed to render map: ", error);
+    throw error;
+  }
+}, 5000);
+
 export {};

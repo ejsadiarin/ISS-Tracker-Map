@@ -2,10 +2,9 @@
   height: 100%;
 }
 
-.iss {
+#iss {
   /*position: relative;*/
   bottom: -50%;
-  width: 400;
 }
 
 html,
