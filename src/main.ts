@@ -24,10 +24,10 @@ async function initMap() {
   //});
 
   const img = document.createElement("img");
-  img.src = "./assets/iss-img-realistic.png";
+  img.src = "./assets/iss-tracker-map-icon-img.png";
   img.alt = "ISSIMAGE";
-  img.width = 100;
-  img.height = 100;
+  img.width = 250;
+  img.height = 230;
   img.id = "iss";
 
   const { AdvancedMarkerElement } = (await google.maps.importLibrary(
