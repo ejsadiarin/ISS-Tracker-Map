@@ -24,7 +24,7 @@ async function initMap() {
   //});
 
   const img = document.createElement("img");
-  img.src = "./assets/issImage.png";
+  img.src = "./assets/iss-img-realistic.png";
   img.alt = "ISSIMAGE";
   img.width = 100;
   img.height = 100;
