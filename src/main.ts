@@ -2,80 +2,75 @@ import "./style.css";
 import { ISSType } from "./types";
 import { posFetcher } from "./fetcher.ts";
 
-async function elementUpdater(data: ISSType) {
-  try {
-    // Request needed libraries.
-    const { Map } = (await google.maps.importLibrary(
-      "maps",
-    )) as google.maps.MapsLibrary;
+let map: google.maps.Map;
+let infoWindow: google.maps.InfoWindow;
+let overlayImgNew: google.maps.marker.AdvancedMarkerElement;
 
-    const { AdvancedMarkerElement } = (await google.maps.importLibrary(
-      "marker",
-    )) as google.maps.MarkerLibrary;
+// construct/initialize/render the needed elements with default values
+// -> values get populated at runtime (with API)
+async function initMap() {
+  const { Map } = (await google.maps.importLibrary(
+    "maps",
+  )) as google.maps.MapsLibrary;
+  map = new Map(document.getElementById("map") as HTMLElement, {
+    zoom: 4,
+    center: { lat: 0, lng: 0 },
+    mapTypeId: google.maps.MapTypeId.SATELLITE,
+    mapId: "ISS_MAP_ID",
+  });
 
-    const myLatlng = { lat: data.latitude, lng: data.longitude };
+  infoWindow = new google.maps.InfoWindow({
+    position: { lat: 0, lng: 0 },
+  });
 
-    const img = document.createElement("img");
-    img.src = "./assets/issImage.png";
-    img.alt = "ISSIMAGE";
-    img.width = 100;
-    img.height = 100;
-    img.id = "iss";
+  const img = document.createElement("img");
+  img.src = "./assets/issImage.png";
+  img.alt = "ISSIMAGE";
+  img.width = 100;
+  img.height = 100;
+  img.id = "iss";
 
-    let map = new Map(document.getElementById("map") as HTMLElement, {
-      zoom: 4,
-      center: myLatlng,
-      mapTypeId: google.maps.MapTypeId.SATELLITE,
-      mapId: "ISS_MAP_ID",
-    });
-
-    // Create the initial InfoWindow.
-    let infoWindow = new google.maps.InfoWindow({
-      position: myLatlng,
-    });
-    infoWindow.setContent(JSON.stringify(myLatlng, null, 2));
-
-    infoWindow.open(map);
-
-    let overlayImg = new AdvancedMarkerElement({
-      map: map,
-      position: myLatlng,
-      content: img,
-      title: "ISS",
-      zIndex: 999,
-    });
-
-    // Configure the click listener.
-    map.addListener("click", (mapsMouseEvent) => {
-      // Close the current InfoWindow.
-      infoWindow.close();
-
-      // Create a new InfoWindow.
-      infoWindow = new google.maps.InfoWindow({
-        position: mapsMouseEvent.latLng,
-      });
-      infoWindow.setContent(
-        JSON.stringify(mapsMouseEvent.latLng.toJSON(), null, 2),
-      );
-      infoWindow.open(map);
-    });
-  } catch (error) {
-    console.error("Failed to render map: ", error);
-    throw error;
-  }
+  const { AdvancedMarkerElement } = (await google.maps.importLibrary(
+    "marker",
+  )) as google.maps.MarkerLibrary;
+  overlayImgNew = new AdvancedMarkerElement({
+    map: map,
+    position: { lat: 0, lng: 0 },
+    content: img,
+    title: "ISS",
+    zIndex: 999,
+  });
 }
 
-const data = await posFetcher();
-elementUpdater(data);
+async function updateElements(data: ISSType) {
+  const myLatlng = { lat: data.latitude, lng: data.longitude };
 
-setInterval(async () => {
-  try {
-    const data = await posFetcher();
-    elementUpdater(data);
-  } catch (error) {
-    console.error("Failed to render map: ", error);
-    throw error;
-  }
-}, 5000);
+  // update map center
+  map.setCenter(myLatlng);
+
+  // update InfoWindow position and content
+  infoWindow.setPosition(myLatlng);
+  infoWindow.setContent(JSON.stringify(myLatlng, null, 2));
+  infoWindow.open(map);
+
+  // update overlay image position
+  overlayImgNew.position = myLatlng;
+}
+
+initMap().then(async () => {
+  const data = await posFetcher();
+  updateElements(data);
+
+  // fetch new latlong data every 5 seconds
+  setInterval(async () => {
+    try {
+      const data = await posFetcher();
+      updateElements(data);
+    } catch (error) {
+      console.error("Failed to render map: ", error);
+      throw error;
+    }
+  }, 5000);
+});
 
 export {};
