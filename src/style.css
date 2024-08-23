@@ -11,6 +11,28 @@
   text-align: center;
 }
 
+/*.info {*/
+/*  display: flex;*/
+/*  justify-content: space-around;*/
+/*  align-items: center;*/
+/*}*/
+
+.iss-data {
+  display: flex;
+  flex-direction: column;
+  justify-content: initial;
+  align-items: center;
+  text-align: left;
+  position: absolute;
+  z-index: 999;
+  background: #000000;
+  opacity: 0.7;
+  top: 20%;
+  left: 0.5%;
+  width: 300px;
+  gap: 3;
+}
+
 html,
 body {
   height: 100%;
