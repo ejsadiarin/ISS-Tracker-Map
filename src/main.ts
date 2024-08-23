@@ -3,7 +3,7 @@ import { ISSType } from "./types";
 import { posFetcher } from "./fetcher.ts";
 
 let map: google.maps.Map;
-let infoWindow: google.maps.InfoWindow;
+//let infoWindow: google.maps.InfoWindow;
 let overlayImgNew: google.maps.marker.AdvancedMarkerElement;
 
 // construct/initialize/render the needed elements with default values
@@ -19,9 +19,9 @@ async function initMap() {
     mapId: "ISS_MAP_ID",
   });
 
-  infoWindow = new google.maps.InfoWindow({
-    position: { lat: 0, lng: 0 },
-  });
+  //infoWindow = new google.maps.InfoWindow({
+  //  position: { lat: 0, lng: 0 },
+  //});
 
   const img = document.createElement("img");
   img.src = "./assets/issImage.png";
@@ -46,15 +46,28 @@ async function updateElements(data: ISSType) {
   const myLatlng = { lat: data.latitude, lng: data.longitude };
 
   // update map center
-  map.setCenter(myLatlng);
+  map.setCenter(myLatlng); // can turn off if becomes annoying lol
 
   // update InfoWindow position and content
-  infoWindow.setPosition(myLatlng);
-  infoWindow.setContent(JSON.stringify(myLatlng, null, 2));
-  infoWindow.open(map);
+  //infoWindow.setPosition(myLatlng);
+  //infoWindow.setContent(JSON.stringify(myLatlng, null, 2));
+  //infoWindow.open(map);
 
   // update overlay image position
   overlayImgNew.position = myLatlng;
+}
+
+function updateISSInfoData(data: ISSType) {
+  document.querySelector<HTMLParagraphElement>("#latitude")!.textContent =
+    `Latitude: ${data.latitude.toString()}`;
+  document.querySelector<HTMLParagraphElement>("#longitude")!.textContent =
+    `Longitude: ${data.longitude.toString()}`;
+  document.querySelector<HTMLParagraphElement>("#altitude")!.textContent =
+    `Altitude: ${data.altitude.toString()}`;
+  document.querySelector<HTMLParagraphElement>("#velocity")!.textContent =
+    `Velocity: ${data.velocity.toString()}`;
+  document.querySelector<HTMLParagraphElement>("#units")!.textContent =
+    `Units: ${data.units}`;
 }
 
 initMap().then(async () => {
@@ -66,11 +79,10 @@ initMap().then(async () => {
     try {
       const data = await posFetcher();
       updateElements(data);
+      updateISSInfoData(data);
     } catch (error) {
       console.error("Failed to render map: ", error);
       throw error;
     }
   }, 5000);
 });
-
-export {};
